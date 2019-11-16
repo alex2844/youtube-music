@@ -1,0 +1,23 @@
+{
+	"name": "youtube-music",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"start": "mkdir -p files/ && node $npm_package_main",
+		"sync": "adb push --sync $PWD/files/* /sdcard/Music"
+	},
+	"dependencies": {
+		"nodejs-fetch": "^1.0.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/alex2844/youtube-music.git"
+	},
+	"author": {
+		"name": "Alex Smith",
+		"email": "alex.smith2844@gmail.com",
+		"website": "https://me.qwedl.com/",
+		"github": "https://github.com/alex2844"
+	}
+}
