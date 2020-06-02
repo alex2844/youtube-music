@@ -7,6 +7,6 @@ if ! (stat -t /usr/local/lib/python3*/dist-packages/{ytmusicapi,youtube_dl,mutag
 	sudo pip3 install ytmusicapi youtube-dl mutagen
 fi
 if ! (stat -t /usr/local/lib/python*/dist-packages/google/colab > /dev/null 2>&1) then
-	$(echo $([ `type -p curl` ] && echo "curl -s" || echo "wget -q -O -")" https://raw.githubusercontent.com/alex2844/youtube-music/master/ymusic.py") > 'test.py'
-	chmod +x /usr/local/bin/ymusic;
+	sudo $(echo $([ `type -p curl` ] && echo "curl -s" || echo "wget -q -O -")" https://raw.githubusercontent.com/alex2844/youtube-music/master/ymusic.py") > 'test.py'
+	sudo chmod +x /usr/local/bin/ymusic;
 fi
