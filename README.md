@@ -1,39 +1,29 @@
 # youtube-music
 
-## Installation
-## Установка
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/alex2844/youtube-music/blob/master/ymusic.ipynb 'Open In Colab')
+
+## Скачивание файлов, торрентов и магнитов в Google Drive
+
+#### Справка
 ```
-git clone https://github.com/alex2844/youtube-music.git && cd youtube-music && npm install
+:$ ymusic --help
+-h, --help             Print help
+-v, --version          Print program version
+--auth                 Authorization
+-a, --all              Download all liked songs
+-o, --one ID           Download one song
+-s, --sync             Sync with android phone
 ```
 
-## Get playlist
-## Получить плейлист
-### Open playlist on music.youtube.com and paste code to DevTools (Ctrl+Shift+J)
-### Откройте плейлист на сайте music.youtube.com и вставьте код в DevTools (Ctrl+Shift+J)
-```javascript
-document.body.append(Object.assign(document.createElement('script'), {
-	src: 'https://cdn.jsdelivr.net/gh/alex2844/youtube-music/index.js',
-	onload: e => e.target.remove()
-}))
+#### Установка на локальную машину (Например ubuntu)
+```bash
+curl -sL https://raw.githubusercontent.com/alex2844/youtube-music/master/install.sh | sudo -E bash -
 ```
 
-## Download playlist
-## Скачать плейлист
-```javascript
-npm start
-```
+#### Запуск в Colab (Например если не хотите ставить python)
+* Нажмите на значок с надписью 'Открыть в Colab'
+* Запустите (Runtime -> Run all)
+После завершения загрузки, загруженные файлы будут находиться на вашем google диске в папке с именем 'ymusic'
 
-## Sync playlist to android (adb)
-## Синхранизация плейлиста с android (adb)
-```javascript
-npm run sync
-```
-
-## TODO
-- Возможно откажусь от сторонего сервиса
-- Докачивание
-- При скачивании удалять отсутствующие в плейлисте треки
-- При синхранизации удалять старый плейлист
-- ID3
-- Создание каталога files из самого приложения
-- Бинарники
+#### TODO
+* Добавить видео инструкции
