@@ -7,7 +7,7 @@ from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC
 
 version = '1.5.0'
 def auth():
-    cookie_sid = getpass.getpass(prompt='Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value')
+    cookie_sid = getpass.getpass(prompt='Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value\n')
     if not cookie_sid:
         sys.exit("exit: empty cookie")
     cookie_hsid = getpass.getpass(prompt='Cookie:HSID:')
