@@ -5,6 +5,13 @@ import getopt, os, sys, json, youtube_dl
 from ytmusicapi import YTMusic
 from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC
 
+if os.environ.get('COLAB_GPU', False):
+    from google.colab import drive
+    drive.mount('/content/drive')
+    if not os.path.exists('/content/drive/ymusic'):
+        os.mkdir('/content/drive/ymusic')
+    os.chdir('/content/drive/ymusic')
+
 version = '1.5.0'
 def auth():
     print('Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value')
@@ -93,7 +100,10 @@ def sync():
 if __name__ == "__main__":
     arguments, values = getopt.getopt(sys.argv[1:], 'hvao:s', ['help', 'version', 'auth', 'all', 'one=', 'sync'])
     if len(arguments) is 0:
-        arguments = [('-h', '')]
+        if os.environ.get('COLAB_GPU', False):
+            arguments = [('-a', '')]
+        else:
+            arguments = [('-h', '')]
     for current_argument, current_value in arguments:
         if current_argument in ('-h', '--help'):
             print('\n'.join([
