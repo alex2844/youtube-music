@@ -7,24 +7,19 @@ from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC
 
 version = '1.5.0'
 def auth():
-    print('Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value')
-    cookie_sid = getpass.getpass()
+    cookie_sid = getpass.getpass(prompt='Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value')
     if not cookie_sid:
         sys.exit("exit: empty cookie")
-    print('Cookie:HSID:')
-    cookie_hsid = getpass.getpass()
+    cookie_hsid = getpass.getpass(prompt='Cookie:HSID:')
     if not cookie_hsid:
         sys.exit("exit: empty cookie")
-    print('Cookie:SSID')
-    cookie_ssid = getpass.getpass()
+    cookie_ssid = getpass.getpass(prompt='Cookie:SSID')
     if not cookie_ssid:
         sys.exit("exit: empty cookie")
-    print('Cookie:APISID:')
-    cookie_apisid = getpass.getpass()
+    cookie_apisid = getpass.getpass(prompt='Cookie:APISID:')
     if not cookie_apisid:
         sys.exit("exit: empty cookie")
-    print('Cookie:SAPISID:')
-    cookie_sapisid = getpass.getpass()
+    cookie_sapisid = getpass.getpass(prompt='Cookie:SAPISID:')
     if not cookie_sapisid:
         sys.exit("exit: empty cookie")
     with open(os.path.expanduser("~/.ymusic.json"), 'w') as f:
