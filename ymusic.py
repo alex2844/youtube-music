@@ -6,8 +6,6 @@ from ytmusicapi import YTMusic
 from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC
 
 if os.environ.get('COLAB_GPU', False):
-    from google.colab import drive
-    drive.mount('/content/drive')
     if not os.path.exists('/content/drive/ymusic'):
         os.mkdir('/content/drive/ymusic')
     os.chdir('/content/drive/ymusic')
