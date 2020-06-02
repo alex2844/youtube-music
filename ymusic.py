@@ -5,11 +5,6 @@ import getopt, os, sys, json, youtube_dl
 from ytmusicapi import YTMusic
 from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC
 
-if os.environ.get('COLAB_GPU', False):
-    if not os.path.exists('/content/drive/ymusic'):
-        os.mkdir('/content/drive/ymusic')
-    os.chdir('/content/drive/ymusic')
-
 version = '1.5.0'
 def auth():
     print('Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value')
