@@ -10,13 +10,7 @@ fi
 if ! (stat -t /usr/local/lib/python3*/dist-packages/{ytmusicapi,youtube_dl,mutagen} > /dev/null 2>&1) then
 	sudo pip3 install ytmusicapi youtube-dl mutagen
 fi
-if (stat -t /usr/local/lib/python*/dist-packages/google/colab > /dev/null 2>&1) then
-	if [ ! -e "/content/drive/ymusic" ]; then
-		mkdir '/content/drive/ymusic';
-	fi
-	cd '/content/drive/ymusic';
-	fetch "$URL" | python
-else
+if ! (stat -t /usr/local/lib/python*/dist-packages/google/colab > /dev/null 2>&1) then
 	fetch "$URL" > /usr/local/bin/ymusic;
 	chmod +x /usr/local/bin/ymusic;
 fi

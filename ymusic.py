@@ -1,30 +1,30 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import getopt, os, sys, json, youtube_dl
+import getopt, os, sys, json, getpass, youtube_dl
 from ytmusicapi import YTMusic
 from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC
 
 version = '1.5.0'
 def auth():
     print('Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value')
-    cookie_sid = str(input())
+    cookie_sid = getpass.getpass()
     if not cookie_sid:
         sys.exit("exit: empty cookie")
     print('Cookie:HSID:')
-    cookie_hsid = str(input())
+    cookie_hsid = getpass.getpass()
     if not cookie_hsid:
         sys.exit("exit: empty cookie")
     print('Cookie:SSID')
-    cookie_ssid = str(input())
+    cookie_ssid = getpass.getpass()
     if not cookie_ssid:
         sys.exit("exit: empty cookie")
     print('Cookie:APISID:')
-    cookie_apisid = str(input())
+    cookie_apisid = getpass.getpass()
     if not cookie_apisid:
         sys.exit("exit: empty cookie")
     print('Cookie:SAPISID:')
-    cookie_sapisid = str(input())
+    cookie_sapisid = getpass.getpass()
     if not cookie_sapisid:
         sys.exit("exit: empty cookie")
     with open(os.path.expanduser("~/.ymusic.json"), 'w') as f:
