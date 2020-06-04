@@ -27,6 +27,7 @@ curl -sL https://raw.githubusercontent.com/alex2844/youtube-music/master/install
 
 #### TODO
 * Скачивание плейлистов
+* Поддержка авторизации через логин-пароль
 
 ## Downloads songs from Youtube Music
 
