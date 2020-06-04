@@ -26,4 +26,10 @@ curl -sL https://raw.githubusercontent.com/alex2844/youtube-music/master/install
 После завершения загрузки, загруженные файлы будут находиться на вашем google диске в папке с именем 'ymusic'
 
 #### TODO
-* Добавить видео инструкции
+* Скачивание плейлистов
+
+## Downloads songs from Youtube Music
+
+#### Youtube
+[![Youtube](https://img.youtube.com/vi/9d4cW0MACXA/0.jpg)](https://www.youtube.com/watch?v=9d4cW0MACXA 'Youtube: Скачивание треков из Youtube Music на компьютер')
+[![Youtube](https://img.youtube.com/vi/k6GZlTG5RFI/0.jpg)](https://www.youtube.com/watch?v=k6GZlTG5RFI 'Youtube: Скачивание треков из Youtube Music в google drive')
