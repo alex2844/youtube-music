@@ -26,7 +26,6 @@ curl -sL https://raw.githubusercontent.com/alex2844/youtube-music/master/install
 После завершения загрузки, загруженные файлы будут находиться на вашем google диске в папке с именем 'ymusic'
 
 #### TODO
-* Скачивание плейлистов
 * Поддержка авторизации через логин-пароль
 
 ## Downloads songs from Youtube Music
