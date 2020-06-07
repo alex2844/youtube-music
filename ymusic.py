@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import getopt, os, sys, json, getpass, youtube_dl
+import getopt, os, sys, json, getpass, re, youtube_dl
 from ytmusicapi import YTMusic
 from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC
 
@@ -42,31 +42,11 @@ def auth():
 def all():
     if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
         auth()
-    ytmusic = YTMusic(os.path.expanduser("~/.ymusic.json"))
-    liked = ytmusic.get_liked_songs()
-    for song in liked['tracks']:
-        if not os.path.exists(song['title']+'.mp3'):
-            one(song['videoId'], song['title'])
-            audio = ID3(song['title']+'.mp3')
-            with open(song['title']+'.jpg', 'rb') as albumart:
-                audio['APIC'] = APIC(
-                    encoding=3,
-                    mime='image/jpeg',
-                    type=3, desc=song['title'],
-                    data=albumart.read()
-                )
-            os.remove(song['title']+'.jpg')
-            if song['artists'] is not None:
-                audio['TPE1'] = TPE1(encoding=3, text=song['artists'][0]['name'])
-            if song['album'] is not None:
-                audio['TALB'] = TALB(encoding=3, text=song['album']['name'])
-            audio['TIT2'] = TRCK(encoding=3, text=song['title'])
-            audio.save()
-        else:
-            print('[youtube-music] Skiping: '+song['title'])
-    print('Finish')
+    downlist_(YTMusic(os.path.expanduser("~/.ymusic.json")).get_liked_songs())
 
 def one(id, title=None):
+    if re.match(r"^https://", id):
+        id = id.split('v=')[1].split('&')[0]
     if title is None:
         title = id
     print('[youtube-music] Starting: '+title)
@@ -82,11 +62,48 @@ def one(id, title=None):
     }) as ydl:
         ydl.download(['https://www.youtube.com/watch?v='+id])
 
+def downlist_(list):
+    for song in list['tracks']:
+        if song['videoId'] is not None:
+            fname = re.sub('[^-а-яА-Яa-zA-Z0-9_.() ]+', '', song['title'])
+            if not os.path.exists(fname+'.mp3'):
+                one(song['videoId'], fname)
+                audio = ID3(fname+'.mp3')
+                with open(fname+'.jpg', 'rb') as albumart:
+                    audio['APIC'] = APIC(
+                        encoding=3,
+                        mime='image/jpeg',
+                        type=3, desc=song['title'],
+                        data=albumart.read()
+                    )
+                os.remove(fname+'.jpg')
+                if song['artists'] is not None:
+                    audio['TPE1'] = TPE1(encoding=3, text=song['artists'][0]['name'])
+                if song['album'] is not None:
+                    audio['TALB'] = TALB(encoding=3, text=song['album']['name'])
+                audio['TIT2'] = TRCK(encoding=3, text=song['title'])
+                audio.save()
+            else:
+                print('[youtube-music] Skiping: '+song['title'])
+    print('Finish')
+
+def playlist(id):
+    if re.match(r"^https://", id):
+        id = id.split('list=')[1]
+    try:
+        list = YTMusic().get_playlist(id)
+    except:
+        if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
+            auth()
+        list = YTMusic(os.path.expanduser("~/.ymusic.json")).get_playlist(id)
+    downlist_(list)
+
 def sync():
     os.system('adb push --sync ./* /sdcard/Music')
 
-if __name__ == "__main__":
-    arguments, values = getopt.getopt(sys.argv[1:], 'hvao:s', ['help', 'version', 'auth', 'all', 'one=', 'sync'])
+def main(args):
+    opt = ['help', 'version', 'auth', 'all', 'one=', 'playlist=', 'sync']
+    arguments, values = getopt.getopt(args, 'hvao:p:s', opt)
     if len(arguments) is 0:
         if os.environ.get('COLAB_GPU', False):
             arguments = [('-a', '')]
@@ -100,6 +117,7 @@ if __name__ == "__main__":
                 '--auth                 Authorization',
                 '-a, --all              Download all liked songs',
                 '-o, --one ID           Download one song',
+                '-p, --playlist ID      Download playlist',
                 '-s, --sync             Sync with android phone'
             ]))
         elif current_argument in ('-v', '--version'):
@@ -108,7 +126,12 @@ if __name__ == "__main__":
             all()
         elif current_argument in ('-o', '--one'):
             one(current_value)
-        elif current_argument in ('--auth'):
-            auth()
+        elif current_argument in ('-p', '--playlist'):
+            playlist(current_value)
         elif current_argument in ('-s', '--sync'):
             sync()
+        elif current_argument in ('--auth'):
+            auth()
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
