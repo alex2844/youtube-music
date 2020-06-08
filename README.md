@@ -9,9 +9,11 @@
 :$ ymusic --help
 -h, --help             Print help
 -v, --version          Print program version
+--colab                Colab menu
 --auth                 Authorization
 -a, --all              Download all liked songs
 -o, --one ID           Download one song
+-p, --playlist ID      Download playlist
 -s, --sync             Sync with android phone
 ```
 
