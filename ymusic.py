@@ -102,11 +102,11 @@ def sync():
     os.system('adb push --sync ./* /sdcard/Music')
 
 def main(args):
-    opt = ['help', 'version', 'auth', 'all', 'one=', 'playlist=', 'sync']
+    opt = ['help', 'version', 'colab', 'auth', 'all', 'one=', 'playlist=', 'sync']
     arguments, values = getopt.getopt(args, 'hvao:p:s', opt)
     if len(arguments) is 0:
         if os.environ.get('COLAB_GPU', False):
-            arguments = [('-a', '')]
+            arguments = [('--colab', '')]
         else:
             arguments = [('-h', '')]
     for current_argument, current_value in arguments:
@@ -114,6 +114,7 @@ def main(args):
             print('\n'.join([
                 '-h, --help             Print help',
                 '-v, --version          Print program version',
+                '--colab                Colab menu',
                 '--auth                 Authorization',
                 '-a, --all              Download all liked songs',
                 '-o, --one ID           Download one song',
@@ -132,6 +133,15 @@ def main(args):
             sync()
         elif current_argument in ('--auth'):
             auth()
+        elif current_argument in ('--colab'):
+            opt = list(filter(lambda v : v not in ('help', 'auth', 'colab', 'sync'), opt))
+            for k, v in enumerate(opt, start=1):
+                print(k, v.replace('=', ''))
+            sel = opt[int(input()) - 1];
+            args = [ '--'+sel.replace('=', '') ]
+            if sel[-1] == '=':
+                args.append(str(input('ID: ')))
+            main(args)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
