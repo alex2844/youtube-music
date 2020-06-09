@@ -29,8 +29,6 @@ curl -sL https://raw.githubusercontent.com/alex2844/youtube-music/master/install
 
 #### TODO
 * Поддержка авторизации через логин-пароль
-* Исправить: Название трека прописывается в поле номера трека
-* Создавать директории для альбомов
 
 ## Downloads songs from Youtube Music
 

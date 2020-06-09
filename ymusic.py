@@ -3,9 +3,9 @@
 
 import getopt, os, sys, json, getpass, re, youtube_dl
 from ytmusicapi import YTMusic
-from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC
+from mutagen.id3 import ID3, APIC, TPE1, TALB, TIT2, COMM
 
-version = '1.5.0'
+version = '1.5.2'
 limit = 100000
 def auth():
     cookie_sid = getpass.getpass(prompt='Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value\n')
@@ -40,12 +40,7 @@ def auth():
             ])
         }, f)
 
-def all():
-    if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
-        auth()
-    downlist_(YTMusic(os.path.expanduser("~/.ymusic.json")).get_liked_songs(limit))
-
-def one(id, title=None):
+def download(id, title=None):
     if re.match(r"^https://", id):
         id = id.split('v=')[1].split('&')[0]
     if title is None:
@@ -63,48 +58,68 @@ def one(id, title=None):
     }) as ydl:
         ydl.download(['https://www.youtube.com/watch?v='+id])
 
-def downlist_(list):
-    for song in list['tracks']:
-        if song['videoId'] is not None:
-            fname = re.sub('[^-а-яА-Яa-zA-Z0-9_.() ]+', '', song['title'])
-            if not os.path.exists(fname+'.mp3'):
-                one(song['videoId'], fname)
-                audio = ID3(fname+'.mp3')
-                with open(fname+'.jpg', 'rb') as albumart:
-                    audio['APIC'] = APIC(
-                        encoding=3,
-                        mime='image/jpeg',
-                        type=3, desc=song['title'],
-                        data=albumart.read()
-                    )
-                os.remove(fname+'.jpg')
-                if song['artists'] is not None:
-                    audio['TPE1'] = TPE1(encoding=3, text=song['artists'][0]['name'])
-                if song['album'] is not None:
-                    audio['TALB'] = TALB(encoding=3, text=song['album']['name'])
-                audio['TIT2'] = TRCK(encoding=3, text=song['title'])
-                audio.save()
-            else:
-                print('[youtube-music] Skiping: '+song['title'])
-    print('Finish')
-
-def playlist(id):
-    if re.match(r"^https://", id):
-        id = id.split('list=')[1]
-    try:
-        list = YTMusic().get_playlist(id, limit)
-    except:
+def playlist(id, doubles=False):
+    if id is None:
         if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
             auth()
-        list = YTMusic(os.path.expanduser("~/.ymusic.json")).get_playlist(id, limit)
-    downlist_(list)
+        list = YTMusic(os.path.expanduser("~/.ymusic.json")).get_liked_songs(limit)
+    else:
+        if re.match(r"^https://", id):
+            id = id.split('list=')[1]
+        try:
+            list = YTMusic().get_playlist(id, limit)
+        except:
+            if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
+                auth()
+            list = YTMusic(os.path.expanduser("~/.ymusic.json")).get_playlist(id, limit)
+    if doubles is False:
+        for song in list['tracks']:
+            if song['videoId'] is not None:
+                fname = re.sub('[^-а-яА-Яa-zA-Z0-9_.() ]+', '', song['title']).strip()
+                if song['album'] is not None:
+                    fname = os.path.join(re.sub('[^-а-яА-Яa-zA-Z0-9_.() ]+', '', song['album']['name']).strip(), fname)
+                if not os.path.exists(fname+'.mp3'):
+                    download(song['videoId'], fname)
+                    audio = ID3(fname+'.mp3')
+                    with open(fname+'.jpg', 'rb') as albumart:
+                        audio['APIC'] = APIC(
+                            encoding=3,
+                            mime='image/jpeg',
+                            type=3, desc=song['title'],
+                            data=albumart.read()
+                        )
+                    os.remove(fname+'.jpg')
+                    if song['artists'] is not None:
+                        audio['TPE1'] = TPE1(encoding=3, text=song['artists'][0]['name'])
+                    if song['album'] is not None:
+                        audio['TALB'] = TALB(encoding=3, text=song['album']['name'])
+                    audio['TIT2'] = TIT2(encoding=3, text=song['title'])
+                    audio['COMM'] = COMM(encoding=3, lang='eng', desc='desc', text='https://music.youtube.com/watch?v='+song['videoId'])
+                    audio.save()
+                else:
+                    print('[youtube-music] Skiping: '+fname)
+        print('Finish')
+    else:
+        titles = []
+        ids = []
+        for song in list['tracks']:
+            if song['videoId'] is not None:
+                id = song['videoId']
+                title = song['title'].split(' [')[0].split(' (')[0]
+                if title in titles:
+                    print('\n'+title)
+                    print('https://music.youtube.com/watch?v='+ids[titles.index(title)])
+                    print('https://music.youtube.com/watch?v='+id)
+                else:
+                    titles.append(title)
+                    ids.append(id)
 
 def sync():
     os.system('adb push --sync ./* /sdcard/Music')
 
 def main(args):
-    opt = ['help', 'version', 'colab', 'auth', 'all', 'one=', 'playlist=', 'sync']
-    arguments, values = getopt.getopt(args, 'hvao:p:s', opt)
+    opt = ['help', 'version', 'doubles', 'colab', 'auth', 'all', 'one=', 'playlist=', 'sync']
+    arguments, values = getopt.getopt(args, 'hvdao:p:s', opt)
     if len(arguments) is 0:
         if os.environ.get('COLAB_GPU', False):
             arguments = [('--colab', '')]
@@ -115,6 +130,7 @@ def main(args):
             print('\n'.join([
                 '-h, --help             Print help',
                 '-v, --version          Print program version',
+                '-d, --doubles          Show doubles',
                 '--colab                Colab menu',
                 '--auth                 Authorization',
                 '-a, --all              Download all liked songs',
@@ -125,17 +141,17 @@ def main(args):
         elif current_argument in ('-v', '--version'):
             print('[youtube-music] Version: '+version)
         elif current_argument in ('-a', '--all'):
-            all()
+            playlist(None, ('-d' in args) or ('--doubles' in args))
         elif current_argument in ('-o', '--one'):
-            one(current_value)
+            download(current_value)
         elif current_argument in ('-p', '--playlist'):
-            playlist(current_value)
+            playlist(current_value, ('-d' in args) or ('--doubles' in args))
         elif current_argument in ('-s', '--sync'):
             sync()
         elif current_argument in ('--auth'):
             auth()
         elif current_argument in ('--colab'):
-            opt = list(filter(lambda v : v not in ('help', 'auth', 'colab', 'sync'), opt))
+            opt = list(filter(lambda v : v not in ('help', 'doubles', 'auth', 'colab', 'sync'), opt))
             for k, v in enumerate(opt, start=1):
                 print(k, v.replace('=', ''))
             sel = opt[int(input()) - 1];
