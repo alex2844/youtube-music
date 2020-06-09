@@ -1,0 +1,30 @@
+name: action_release
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build:
+    name: Action Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Vars
+        id: vars
+        run: |
+          version=${GITHUB_REF/refs\/tags\//}
+          log=$((test -f CHANGELOG.md && (sed "1,/\[${version:1}\]/d;/\[/Q" CHANGELOG.md | sed '/^$/d')) || echo '')
+          log="${log//'%'/'%25'}"
+          log="${log//$'\n'/'%0A'}"
+          log="${log//$'\r'/'%0D'}"
+          echo "::set-output name=version::$version"
+          echo "::set-output name=log::$log"
+      - name: Git Release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        with:
+          tag_name: ${{steps.vars.outputs.version}}
+          release_name: Release ${{steps.vars.outputs.version}}
+          body: ${{steps.vars.outputs.log}}
