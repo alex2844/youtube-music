@@ -29,9 +29,15 @@ curl -sL https://raw.githubusercontent.com/alex2844/youtube-music/master/install
 
 #### TODO
 * Поддержка авторизации через логин-пароль
+* Исправить: Название трека прописывается в поле номера трека
+* Создавать директории для альбомов
 
 ## Downloads songs from Youtube Music
 
 #### Youtube
+###### Скачивание треков из Youtube Music на компьютер
 [![Youtube](https://img.youtube.com/vi/9d4cW0MACXA/0.jpg)](https://www.youtube.com/watch?v=9d4cW0MACXA 'Youtube: Скачивание треков из Youtube Music на компьютер')
+###### Скачивание треков из Youtube Music в google drive
 [![Youtube](https://img.youtube.com/vi/k6GZlTG5RFI/0.jpg)](https://www.youtube.com/watch?v=k6GZlTG5RFI 'Youtube: Скачивание треков из Youtube Music в google drive')
+###### Скачивание плейлистов из Youtube Music в google drive
+[![Youtube](https://img.youtube.com/vi/L02LzD5rAXg/0.jpg)](https://www.youtube.com/watch?v=L02LzD5rAXg 'Youtube: Скачивание плейлистов из Youtube Music в google drive')

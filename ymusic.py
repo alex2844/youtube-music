@@ -6,6 +6,7 @@ from ytmusicapi import YTMusic
 from mutagen.id3 import ID3, TPE1, TIT2, TRCK, TALB, APIC
 
 version = '1.5.0'
+limit = 100000
 def auth():
     cookie_sid = getpass.getpass(prompt='Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value\n')
     if not cookie_sid:
@@ -42,7 +43,7 @@ def auth():
 def all():
     if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
         auth()
-    downlist_(YTMusic(os.path.expanduser("~/.ymusic.json")).get_liked_songs())
+    downlist_(YTMusic(os.path.expanduser("~/.ymusic.json")).get_liked_songs(limit))
 
 def one(id, title=None):
     if re.match(r"^https://", id):
@@ -91,11 +92,11 @@ def playlist(id):
     if re.match(r"^https://", id):
         id = id.split('list=')[1]
     try:
-        list = YTMusic().get_playlist(id)
+        list = YTMusic().get_playlist(id, limit)
     except:
         if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
             auth()
-        list = YTMusic(os.path.expanduser("~/.ymusic.json")).get_playlist(id)
+        list = YTMusic(os.path.expanduser("~/.ymusic.json")).get_playlist(id, limit)
     downlist_(list)
 
 def sync():
