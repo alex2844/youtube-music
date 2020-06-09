@@ -9,6 +9,7 @@
 :$ ymusic --help
 -h, --help             Print help
 -v, --version          Print program version
+-d, --doubles          Show doubles
 --colab                Colab menu
 --auth                 Authorization
 -a, --all              Download all liked songs
