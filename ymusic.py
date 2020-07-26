@@ -81,14 +81,15 @@ def playlist(id, doubles=False):
                 if not os.path.exists(fname+'.mp3'):
                     download(song['videoId'], fname)
                     audio = ID3(fname+'.mp3')
-                    with open(fname+'.jpg', 'rb') as albumart:
-                        audio['APIC'] = APIC(
-                            encoding=3,
-                            mime='image/jpeg',
-                            type=3, desc=song['title'],
-                            data=albumart.read()
-                        )
-                    os.remove(fname+'.jpg')
+                    if os.path.exists(fname+'.jpg'):
+                        with open(fname+'.jpg', 'rb') as albumart:
+                            audio['APIC'] = APIC(
+                                encoding=3,
+                                mime='image/jpeg',
+                                type=3, desc=song['title'],
+                                data=albumart.read()
+                            )
+                        os.remove(fname+'.jpg')
                     if song['artists'] is not None:
                         audio['TPE1'] = TPE1(encoding=3, text=song['artists'][0]['name'])
                     if song['album'] is not None:
