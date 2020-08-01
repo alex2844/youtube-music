@@ -156,7 +156,7 @@ def main(args):
         elif current_argument in ('-o', '--one'):
             download(current_value)
         elif current_argument in ('-p', '--playlist'):
-            playlist(current_value, ('-d' in args) or ('--doubles' in args))
+            playlist(current_value, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args))
         elif current_argument in ('-s', '--sync'):
             sync()
         elif current_argument in ('--auth'):
