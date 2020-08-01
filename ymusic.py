@@ -58,7 +58,27 @@ def download(id, title=None):
     }) as ydl:
         ydl.download(['https://www.youtube.com/watch?v='+id])
 
-def playlist(id, doubles=False):
+def foreach(song, fname):
+    download(song['videoId'], fname)
+    audio = ID3(fname+'.mp3')
+    if os.path.exists(fname+'.jpg'):
+        with open(fname+'.jpg', 'rb') as albumart:
+            audio['APIC'] = APIC(
+                encoding=3,
+                mime='image/jpeg',
+                type=3, desc=song['title'],
+                data=albumart.read()
+            )
+        os.remove(fname+'.jpg')
+    if song['artists'] is not None:
+        audio['TPE1'] = TPE1(encoding=3, text=song['artists'][0]['name'])
+    if song['album'] is not None:
+        audio['TALB'] = TALB(encoding=3, text=song['album']['name'])
+    audio['TIT2'] = TIT2(encoding=3, text=song['title'])
+    audio['COMM'] = COMM(encoding=3, lang='eng', desc='desc', text='https://music.youtube.com/watch?v='+song['videoId'])
+    audio.save()
+
+def playlist(id, doubles=False, skipErrors=False):
     if id is None:
         if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
             auth()
@@ -79,24 +99,13 @@ def playlist(id, doubles=False):
                 if song['album'] is not None:
                     fname = os.path.join(re.sub('[^-а-яА-Яa-zA-Z0-9_.() ]+', '', song['album']['name']).strip(), fname)
                 if not os.path.exists(fname+'.mp3'):
-                    download(song['videoId'], fname)
-                    audio = ID3(fname+'.mp3')
-                    if os.path.exists(fname+'.jpg'):
-                        with open(fname+'.jpg', 'rb') as albumart:
-                            audio['APIC'] = APIC(
-                                encoding=3,
-                                mime='image/jpeg',
-                                type=3, desc=song['title'],
-                                data=albumart.read()
-                            )
-                        os.remove(fname+'.jpg')
-                    if song['artists'] is not None:
-                        audio['TPE1'] = TPE1(encoding=3, text=song['artists'][0]['name'])
-                    if song['album'] is not None:
-                        audio['TALB'] = TALB(encoding=3, text=song['album']['name'])
-                    audio['TIT2'] = TIT2(encoding=3, text=song['title'])
-                    audio['COMM'] = COMM(encoding=3, lang='eng', desc='desc', text='https://music.youtube.com/watch?v='+song['videoId'])
-                    audio.save()
+                    if skipErrors is False:
+                        foreach(song, fname)
+                    else:
+                        try:
+                            foreach(song, fname)
+                        except:
+                            print('Error: vid: '+song['videoId'])
                 else:
                     print('[youtube-music] Skiping: '+fname)
         print('Finish')
@@ -119,7 +128,7 @@ def sync():
     os.system('adb push --sync ./* /sdcard/Music')
 
 def main(args):
-    opt = ['help', 'version', 'doubles', 'colab', 'auth', 'all', 'one=', 'playlist=', 'sync']
+    opt = ['help', 'version', 'doubles', 'skip-error', 'colab', 'auth', 'all', 'one=', 'playlist=', 'sync']
     arguments, values = getopt.getopt(args, 'hvdao:p:s', opt)
     if len(arguments) is 0:
         if os.environ.get('COLAB_GPU', False):
@@ -132,6 +141,7 @@ def main(args):
                 '-h, --help             Print help',
                 '-v, --version          Print program version',
                 '-d, --doubles          Show doubles',
+                '--skip-error           Skip error',
                 '--colab                Colab menu',
                 '--auth                 Authorization',
                 '-a, --all              Download all liked songs',
@@ -142,7 +152,7 @@ def main(args):
         elif current_argument in ('-v', '--version'):
             print('[youtube-music] Version: '+version)
         elif current_argument in ('-a', '--all'):
-            playlist(None, ('-d' in args) or ('--doubles' in args))
+            playlist(None, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args))
         elif current_argument in ('-o', '--one'):
             download(current_value)
         elif current_argument in ('-p', '--playlist'):
