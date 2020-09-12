@@ -78,7 +78,7 @@ def foreach(song, fname):
     audio['COMM'] = COMM(encoding=3, lang='eng', desc='desc', text='https://music.youtube.com/watch?v='+song['videoId'])
     audio.save()
 
-def playlist(id, doubles=False, skipErrors=False):
+def playlist(id, doubles=False, skipErrors=False, noSubfolder=False):
     if id is None:
         if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
             auth()
@@ -96,7 +96,7 @@ def playlist(id, doubles=False, skipErrors=False):
         for song in list['tracks']:
             if song['videoId'] is not None:
                 fname = re.sub('[^-а-яА-Яa-zA-Z0-9_.()іІєЄїЇ ]+', '', song['title']).strip()
-                if song['album'] is not None:
+                if song['album'] is not None and not noSubfolder:
                     fname = os.path.join(re.sub('[^-а-яА-Яa-zA-Z0-9_.()іІєЄїЇ ]+', '', song['album']['name']).strip(), fname)
                 if not os.path.exists(fname+'.mp3'):
                     if skipErrors is False:
@@ -128,7 +128,7 @@ def sync():
     os.system('adb push --sync ./* /sdcard/Music')
 
 def main(args):
-    opt = ['help', 'version', 'doubles', 'skip-error', 'colab', 'auth', 'all', 'one=', 'playlist=', 'sync']
+    opt = ['help', 'version', 'doubles', 'skip-error', 'colab', 'auth', 'all', 'one=', 'playlist=', 'sync', 'no-subfolder']
     arguments, values = getopt.getopt(args, 'hvdao:p:s', opt)
     if len(arguments) is 0:
         if os.environ.get('COLAB_GPU', False):
@@ -141,6 +141,7 @@ def main(args):
                 '-h, --help             Print help',
                 '-v, --version          Print program version',
                 '-d, --doubles          Show doubles',
+                '--no-subfolder         Don\'t output songs to subfolders named as album',
                 '--skip-error           Skip error',
                 '--colab                Colab menu',
                 '--auth                 Authorization',
@@ -152,11 +153,11 @@ def main(args):
         elif current_argument in ('-v', '--version'):
             print('[youtube-music] Version: '+version)
         elif current_argument in ('-a', '--all'):
-            playlist(None, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args))
+            playlist(None, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args), ('--no-subfolder' in args))
         elif current_argument in ('-o', '--one'):
             download(current_value)
         elif current_argument in ('-p', '--playlist'):
-            playlist(current_value, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args))
+            playlist(current_value, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args), ('--no-subfolder' in args))
         elif current_argument in ('-s', '--sync'):
             sync()
         elif current_argument in ('--auth'):
