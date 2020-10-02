@@ -95,7 +95,8 @@ def playlist(id, doubles=False, skipErrors=False, noSubfolder=False):
     if doubles is False:
         for song in list['tracks']:
             if song['videoId'] is not None:
-                fname = re.sub('[^-а-яА-Яa-zA-Z0-9_.()іІєЄїЇ ]+', '', song['title']).strip()
+                fname = os.path.join("Music/",
+                                     re.sub('[^-а-яА-Яa-zA-Z0-9_.()іІєЄїЇ ]+', '', song['title']).strip())
                 if song['album'] is not None and not noSubfolder:
                     fname = os.path.join(re.sub('[^-а-яА-Яa-zA-Z0-9_.()іІєЄїЇ ]+', '', song['album']['name']).strip(), fname)
                 if not os.path.exists(fname+'.mp3'):
