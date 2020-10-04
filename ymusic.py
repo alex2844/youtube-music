@@ -8,9 +8,12 @@ from mutagen.id3 import ID3, APIC, TPE1, TALB, TIT2, COMM
 version = '1.5.2'
 limit = 100000
 
-output_folder = "Music/"    # default output folder
+output_folder = "Music/"  # default output folder
+
+
 def auth():
-    cookie_sid = getpass.getpass(prompt='Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value\n')
+    cookie_sid = getpass.getpass(
+        prompt='Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value\n')
     if not cookie_sid:
         sys.exit("exit: empty cookie")
     cookie_hsid = getpass.getpass(prompt='Cookie:HSID:')
@@ -34,20 +37,21 @@ def auth():
             'X-Goog-AuthUser': '0',
             'x-origin': 'https://music.youtube.com',
             'Cookie': '; '.join([
-                'SID='+cookie_sid,
-                'HSID='+cookie_hsid,
-                'SSID='+cookie_ssid,
-                'APISID='+cookie_apisid,
-                'SAPISID='+cookie_sapisid
+                'SID=' + cookie_sid,
+                'HSID=' + cookie_hsid,
+                'SSID=' + cookie_ssid,
+                'APISID=' + cookie_apisid,
+                'SAPISID=' + cookie_sapisid
             ])
         }, f)
+
 
 def download(id, title=None):
     if re.match(r"^https://", id):
         id = id.split('v=')[1].split('&')[0]
     if title is None:
         title = id
-    print('[youtube-music] Starting: '+title)
+    print('[youtube-music] Starting: ' + title)
     with youtube_dl.YoutubeDL({
         'format': 'bestaudio/best',
         'postprocessors': [{
@@ -56,29 +60,32 @@ def download(id, title=None):
             'preferredquality': '0'
         }],
         'writethumbnail': True,
-        'outtmpl': title+'.%(etx)s',
+        'outtmpl': title + '.%(etx)s',
     }) as ydl:
-        ydl.download(['https://www.youtube.com/watch?v='+id])
+        ydl.download(['https://www.youtube.com/watch?v=' + id])
+
 
 def foreach(song, fname):
     download(song['videoId'], fname)
-    audio = ID3(fname+'.mp3')
-    if os.path.exists(fname+'.jpg'):
-        with open(fname+'.jpg', 'rb') as albumart:
+    audio = ID3(fname + '.mp3')
+    if os.path.exists(fname + '.jpg'):
+        with open(fname + '.jpg', 'rb') as albumart:
             audio['APIC'] = APIC(
                 encoding=3,
                 mime='image/jpeg',
                 type=3, desc=song['title'],
                 data=albumart.read()
             )
-        os.remove(fname+'.jpg')
+        os.remove(fname + '.jpg')
     if song['artists'] is not None:
         audio['TPE1'] = TPE1(encoding=3, text=song['artists'][0]['name'])
     if song['album'] is not None:
         audio['TALB'] = TALB(encoding=3, text=song['album']['name'])
     audio['TIT2'] = TIT2(encoding=3, text=song['title'])
-    audio['COMM'] = COMM(encoding=3, lang='eng', desc='desc', text='https://music.youtube.com/watch?v='+song['videoId'])
+    audio['COMM'] = COMM(encoding=3, lang='eng', desc='desc',
+                         text='https://music.youtube.com/watch?v=' + song['videoId'])
     audio.save()
+
 
 def playlist(id, doubles=False, skipErrors=False, noSubfolder=False):
     if id is None:
@@ -102,16 +109,16 @@ def playlist(id, doubles=False, skipErrors=False, noSubfolder=False):
                 if song['album'] is not None and not noSubfolder:
                     fname = os.path.join(re.sub('[^-а-яА-Яa-zA-Z0-9_.()іІєЄїЇ ]+', '',
                                                 song['album']['name']).strip(), fname)
-                if not os.path.exists(fname+'.mp3'):
+                if not os.path.exists(fname + '.mp3'):
                     if skipErrors is False:
                         foreach(song, fname)
                     else:
                         try:
                             foreach(song, fname)
                         except:
-                            print('Error: vid: '+song['videoId'])
+                            print('Error: vid: ' + song['videoId'])
                 else:
-                    print('[youtube-music] Skiping: '+fname)
+                    print('[youtube-music] Skiping: ' + fname)
         print('Finish')
     else:
         titles = []
@@ -121,15 +128,17 @@ def playlist(id, doubles=False, skipErrors=False, noSubfolder=False):
                 id = song['videoId']
                 title = song['title'].split(' [')[0].split(' (')[0]
                 if title in titles:
-                    print('\n'+title)
-                    print('https://music.youtube.com/watch?v='+ids[titles.index(title)])
-                    print('https://music.youtube.com/watch?v='+id)
+                    print('\n' + title)
+                    print('https://music.youtube.com/watch?v=' + ids[titles.index(title)])
+                    print('https://music.youtube.com/watch?v=' + id)
                 else:
                     titles.append(title)
                     ids.append(id)
 
+
 def sync():
     os.system('adb push --sync ./* /sdcard/Music')
+
 
 def main(args):
     global output_folder
@@ -163,26 +172,29 @@ def main(args):
                 '-s, --sync             Sync with android phone'
             ]))
         elif current_argument in ('-v', '--version'):
-            print('[youtube-music] Version: '+version)
+            print('[youtube-music] Version: ' + version)
         elif current_argument in ('-a', '--all'):
-            playlist(None, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args), ('--no-subfolder' in args))
+            playlist(None, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args),
+                     ('--no-subfolder' in args))
         elif current_argument in ('-o', '--one'):
             download(current_value)
         elif current_argument in ('-p', '--playlist'):
-            playlist(current_value, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args), ('--no-subfolder' in args))
+            playlist(current_value, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args),
+                     ('--no-subfolder' in args))
         elif current_argument in ('-s', '--sync'):
             sync()
         elif current_argument in ('--auth'):
             auth()
         elif current_argument in ('--colab'):
-            opt = list(filter(lambda v : v not in ('help', 'doubles', 'auth', 'colab', 'sync'), opt))
+            opt = list(filter(lambda v: v not in ('help', 'doubles', 'auth', 'colab', 'sync'), opt))
             for k, v in enumerate(opt, start=1):
                 print(k, v.replace('=', ''))
             sel = opt[int(input()) - 1];
-            args = [ '--'+sel.replace('=', '') ]
+            args = ['--' + sel.replace('=', '')]
             if sel[-1] == '=':
                 args.append(str(input('ID: ')))
             main(args)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])
