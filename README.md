@@ -2,9 +2,9 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/alex2844/youtube-music/blob/master/ymusic.ipynb 'Open In Colab')
 
-## Скачивание треков из Youtube Music
+## Download tracks from Youtube Music
 
-#### Справка
+#### Reference
 ```
 :$ ymusic --help
 -h, --help             Print help
@@ -18,25 +18,25 @@
 -s, --sync             Sync with android phone
 ```
 
-#### Установка на локальную машину (Например ubuntu)
+#### How to install on local machine (e.g. Ubuntu)
 ```bash
 curl -sL https://raw.githubusercontent.com/alex2844/youtube-music/master/install.sh | sudo -E bash -
 ```
 
-#### Запуск в Colab (Например если не хотите ставить python)
-* Нажмите на значок с надписью 'Открыть в Colab'
-* Запустите (Runtime -> Run all)
-После завершения загрузки, загруженные файлы будут находиться на вашем google диске в папке с именем 'ymusic'
+#### Run in Colab
+* Press the "Run in Colab" button
+* (Runtime -> Run all)
+* After the end of download process tracks will be saved on your Google Drive in 'ymusic' folder
 
 #### TODO
-* Поддержка авторизации через логин-пароль
+* Login-password authorisation
 
 ## Downloads songs from Youtube Music
 
 #### Youtube
-###### Скачивание треков из Youtube Music на компьютер
+###### Downloading tracks from Youtube Music to PC
 [![Youtube](https://img.youtube.com/vi/9d4cW0MACXA/0.jpg)](https://www.youtube.com/watch?v=9d4cW0MACXA 'Youtube: Скачивание треков из Youtube Music на компьютер')
-###### Скачивание треков из Youtube Music в google drive
+###### Downloading tracks from Youtube Music to google drive
 [![Youtube](https://img.youtube.com/vi/k6GZlTG5RFI/0.jpg)](https://www.youtube.com/watch?v=k6GZlTG5RFI 'Youtube: Скачивание треков из Youtube Music в google drive')
-###### Скачивание плейлистов из Youtube Music в google drive
+###### Downloading playlists from Youtube Music to google drive
 [![Youtube](https://img.youtube.com/vi/L02LzD5rAXg/0.jpg)](https://www.youtube.com/watch?v=L02LzD5rAXg 'Youtube: Скачивание плейлистов из Youtube Music в google drive')
