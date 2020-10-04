@@ -145,7 +145,7 @@ def main(args):
     opt = ['help', 'version', 'doubles', 'skip-error', 'colab', 'auth',
            'all', 'one=', 'playlist=', 'sync', 'no-subfolder', 'output=']
     arguments, values = getopt.getopt(args, 'hvdao:p:s', opt)
-    if len(arguments) is 0:
+    if len(arguments) == 0:
         if os.environ.get('COLAB_GPU', False):
             arguments = [('--colab', '')]
         else:
