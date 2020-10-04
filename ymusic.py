@@ -7,6 +7,8 @@ from mutagen.id3 import ID3, APIC, TPE1, TALB, TIT2, COMM
 
 version = '1.5.2'
 limit = 100000
+
+output_folder = "Music/"    # default output folder
 def auth():
     cookie_sid = getpass.getpass(prompt='Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value\n')
     if not cookie_sid:
@@ -95,10 +97,11 @@ def playlist(id, doubles=False, skipErrors=False, noSubfolder=False):
     if doubles is False:
         for song in list['tracks']:
             if song['videoId'] is not None:
-                fname = os.path.join("Music/",
+                fname = os.path.join(output_folder,
                                      re.sub('[^-а-яА-Яa-zA-Z0-9_.()іІєЄїЇ ]+', '', song['title']).strip())
                 if song['album'] is not None and not noSubfolder:
-                    fname = os.path.join(re.sub('[^-а-яА-Яa-zA-Z0-9_.()іІєЄїЇ ]+', '', song['album']['name']).strip(), fname)
+                    fname = os.path.join(re.sub('[^-а-яА-Яa-zA-Z0-9_.()іІєЄїЇ ]+', '',
+                                                song['album']['name']).strip(), fname)
                 if not os.path.exists(fname+'.mp3'):
                     if skipErrors is False:
                         foreach(song, fname)
@@ -129,13 +132,20 @@ def sync():
     os.system('adb push --sync ./* /sdcard/Music')
 
 def main(args):
-    opt = ['help', 'version', 'doubles', 'skip-error', 'colab', 'auth', 'all', 'one=', 'playlist=', 'sync', 'no-subfolder']
+    global output_folder
+    opt = ['help', 'version', 'doubles', 'skip-error', 'colab', 'auth',
+           'all', 'one=', 'playlist=', 'sync', 'no-subfolder', 'output=']
     arguments, values = getopt.getopt(args, 'hvdao:p:s', opt)
     if len(arguments) is 0:
         if os.environ.get('COLAB_GPU', False):
             arguments = [('--colab', '')]
         else:
             arguments = [('-h', '')]
+    # Output folder
+    output_param = [tup[1] for tup in arguments if tup[0] == "--output"]
+    if len(output_param) == 1:
+        output_folder = output_param[0]
+
     for current_argument, current_value in arguments:
         if current_argument in ('-h', '--help'):
             print('\n'.join([
@@ -143,12 +153,13 @@ def main(args):
                 '-v, --version          Print program version',
                 '-d, --doubles          Show doubles',
                 '--no-subfolder         Don\'t output songs to subfolders named as album',
+                '--output <folder>      Change default output folder',
                 '--skip-error           Skip error',
                 '--colab                Colab menu',
                 '--auth                 Authorization',
                 '-a, --all              Download all liked songs',
-                '-o, --one ID           Download one song',
-                '-p, --playlist ID      Download playlist',
+                '-o, --one <ID>         Download one song',
+                '-p, --playlist <ID>    Download playlist',
                 '-s, --sync             Sync with android phone'
             ]))
         elif current_argument in ('-v', '--version'):
