@@ -98,7 +98,7 @@ def playlist(id, doubles=False, skipErrors=False, noSubfolder=False):
         skipErrors=True
     if id is None:
         if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
-            auth()
+            auth(None)
         list = YTMusic(os.path.expanduser("~/.ymusic.json")).get_liked_songs(limit)
     else:
         if re.match(r"^https://", id):
@@ -107,7 +107,7 @@ def playlist(id, doubles=False, skipErrors=False, noSubfolder=False):
             list = YTMusic().get_playlist(id, limit)
         except:
             if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
-                auth()
+                auth(None)
             list = YTMusic(os.path.expanduser("~/.ymusic.json")).get_playlist(id, limit)
     if doubles is False:
         for song in list['tracks']:
