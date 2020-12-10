@@ -10,13 +10,24 @@
 -h, --help             Print help
 -v, --version          Print program version
 -d, --doubles          Show doubles
+--skip-error           Skip error
 --colab                Colab menu
 --auth                 Authorization
+--load-cookies FILE    Use cookies file
+--no-subfolder         Don\'t output songs to subfolders named as album
 -a, --all              Download all liked songs
 -o, --one ID           Download one song
 -p, --playlist ID      Download playlist
 -s, --sync             Sync with android phone
 ```
+
+#### Авторизация через cookie файл
+- Скачиваем расширение CorsProxy (https://alex2844.github.io/js-global-fetch/index.html?extension)
+- Заходим на страницу с расширениями (chrome://extensions/)
+- Включаем режим разработчика
+- Загрузить распакованное расширение
+- Жмем на иконку расширения правой кнопкой мыши
+- Save cookies
 
 #### Установка на локальную машину (Например ubuntu)
 ```bash
@@ -27,9 +38,6 @@ curl -sL https://raw.githubusercontent.com/alex2844/youtube-music/master/install
 * Нажмите на значок с надписью 'Открыть в Colab'
 * Запустите (Runtime -> Run all)
 После завершения загрузки, загруженные файлы будут находиться на вашем google диске в папке с именем 'ymusic'
-
-#### TODO
-* Поддержка авторизации через логин-пароль
 
 ## Downloads songs from Youtube Music
 

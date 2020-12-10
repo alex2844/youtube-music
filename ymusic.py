@@ -5,24 +5,45 @@ import getopt, os, sys, json, getpass, re, youtube_dl
 from ytmusicapi import YTMusic
 from mutagen.id3 import ID3, APIC, TPE1, TALB, TIT2, COMM
 
-version = '1.5.2'
+version = '1.6.0'
 limit = 100000
-def auth():
-    cookie_sid = getpass.getpass(prompt='Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value\n')
-    if not cookie_sid:
-        sys.exit("exit: empty cookie")
-    cookie_hsid = getpass.getpass(prompt='Cookie:HSID:')
-    if not cookie_hsid:
-        sys.exit("exit: empty cookie")
-    cookie_ssid = getpass.getpass(prompt='Cookie:SSID')
-    if not cookie_ssid:
-        sys.exit("exit: empty cookie")
-    cookie_apisid = getpass.getpass(prompt='Cookie:APISID:')
-    if not cookie_apisid:
-        sys.exit("exit: empty cookie")
-    cookie_sapisid = getpass.getpass(prompt='Cookie:SAPISID:')
-    if not cookie_sapisid:
-        sys.exit("exit: empty cookie")
+def auth(cookies):
+    if cookies is None:
+        cookie_sid = getpass.getpass(prompt='Cookie:SID: <<-- https://music.youtube.com/ => DevTools => Application => Cookies => Value\n')
+        if not cookie_sid:
+            sys.exit("exit: empty cookie")
+        cookie_hsid = getpass.getpass(prompt='Cookie:HSID:')
+        if not cookie_hsid:
+            sys.exit("exit: empty cookie")
+        cookie_ssid = getpass.getpass(prompt='Cookie:SSID')
+        if not cookie_ssid:
+            sys.exit("exit: empty cookie")
+        cookie_apisid = getpass.getpass(prompt='Cookie:APISID:')
+        if not cookie_apisid:
+            sys.exit("exit: empty cookie")
+        cookie_sapisid = getpass.getpass(prompt='Cookie:SAPISID:')
+        if not cookie_sapisid:
+            sys.exit("exit: empty cookie")
+        cookie_secure = getpass.getpass(prompt='Cookie:__Secure-3PAPISID:')
+        if not cookie_secure:
+            sys.exit("exit: empty cookie")
+        cookie = '; '.join([
+            'SID='+cookie_sid,
+            'HSID='+cookie_hsid,
+            'SSID='+cookie_ssid,
+            'APISID='+cookie_apisid,
+            'SAPISID='+cookie_sapisid,
+            '__Secure-3PAPISID='+cookie_secure
+        ])
+    else:
+        cookie = ''
+        with open(cookies, 'r') as fp:
+            for line in fp:
+                if not re.match(r'^\#', line) and line.strip():
+                    lf = line.strip().split('\t')
+                    if cookie:
+                        cookie += '; '
+                    cookie += lf[5]+'='+lf[6]
     with open(os.path.expanduser("~/.ymusic.json"), 'w') as f:
         json.dump({
             'User-Agent': 'Mozilla/5.0 (X11; CrOS aarch64 13020.54.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.77 Safari/537.36',
@@ -31,13 +52,7 @@ def auth():
             'Content-Type': 'application/json',
             'X-Goog-AuthUser': '0',
             'x-origin': 'https://music.youtube.com',
-            'Cookie': '; '.join([
-                'SID='+cookie_sid,
-                'HSID='+cookie_hsid,
-                'SSID='+cookie_ssid,
-                'APISID='+cookie_apisid,
-                'SAPISID='+cookie_sapisid
-            ])
+            'Cookie': cookie
         }, f)
 
 def download(id, title=None):
@@ -78,7 +93,9 @@ def foreach(song, fname):
     audio['COMM'] = COMM(encoding=3, lang='eng', desc='desc', text='https://music.youtube.com/watch?v='+song['videoId'])
     audio.save()
 
-def playlist(id, doubles=False, skipErrors=False):
+def playlist(id, doubles=False, skipErrors=False, noSubfolder=False):
+    if os.environ.get('COLAB_GPU', False):
+        skipErrors=True
     if id is None:
         if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
             auth()
@@ -96,7 +113,7 @@ def playlist(id, doubles=False, skipErrors=False):
         for song in list['tracks']:
             if song['videoId'] is not None:
                 fname = re.sub('[^-а-яА-Яa-zA-Z0-9_.() ]+', '', song['title']).strip()
-                if song['album'] is not None:
+                if song['album'] is not None and not noSubfolder:
                     fname = os.path.join(re.sub('[^-а-яА-Яa-zA-Z0-9_.() ]+', '', song['album']['name']).strip(), fname)
                 if not os.path.exists(fname+'.mp3'):
                     if skipErrors is False:
@@ -104,6 +121,8 @@ def playlist(id, doubles=False, skipErrors=False):
                     else:
                         try:
                             foreach(song, fname)
+                        except KeyboardInterrupt:
+                            exit()
                         except:
                             print('Error: vid: '+song['videoId'])
                 else:
@@ -128,7 +147,7 @@ def sync():
     os.system('adb push --sync ./* /sdcard/Music')
 
 def main(args):
-    opt = ['help', 'version', 'doubles', 'skip-error', 'colab', 'auth', 'all', 'one=', 'playlist=', 'sync']
+    opt = ['help', 'version', 'doubles', 'skip-error', 'colab', 'auth', 'load-cookies=', 'all', 'one=', 'playlist=', 'sync', 'no-subfolder']
     arguments, values = getopt.getopt(args, 'hvdao:p:s', opt)
     if len(arguments) is 0:
         if os.environ.get('COLAB_GPU', False):
@@ -144,6 +163,8 @@ def main(args):
                 '--skip-error           Skip error',
                 '--colab                Colab menu',
                 '--auth                 Authorization',
+                '--load-cookies FILE    Use cookies file',
+                '--no-subfolder         Don\'t output songs to subfolders named as album',
                 '-a, --all              Download all liked songs',
                 '-o, --one ID           Download one song',
                 '-p, --playlist ID      Download playlist',
@@ -152,17 +173,19 @@ def main(args):
         elif current_argument in ('-v', '--version'):
             print('[youtube-music] Version: '+version)
         elif current_argument in ('-a', '--all'):
-            playlist(None, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args))
+            playlist(None, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args), ('--no-subfolder' in args))
         elif current_argument in ('-o', '--one'):
             download(current_value)
         elif current_argument in ('-p', '--playlist'):
-            playlist(current_value, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args))
+            playlist(current_value, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args), ('--no-subfolder' in args))
         elif current_argument in ('-s', '--sync'):
             sync()
+        elif current_argument in ('--load-cookies'):
+            auth(current_value)
         elif current_argument in ('--auth'):
-            auth()
+            auth(None)
         elif current_argument in ('--colab'):
-            opt = list(filter(lambda v : v not in ('help', 'doubles', 'auth', 'colab', 'sync'), opt))
+            opt = list(filter(lambda v : v not in ('help', 'doubles', 'skip-error', 'auth', 'load-cookies', 'colab', 'sync', 'no-subfolder'), opt))
             for k, v in enumerate(opt, start=1):
                 print(k, v.replace('=', ''))
             sel = opt[int(input()) - 1];
