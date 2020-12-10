@@ -185,7 +185,7 @@ def main(args):
         elif current_argument in ('--auth'):
             auth(None)
         elif current_argument in ('--colab'):
-            opt = list(filter(lambda v : v not in ('help', 'doubles', 'skip-error', 'auth', 'load-cookies', 'colab', 'sync', 'no-subfolder'), opt))
+            opt = list(filter(lambda v : v not in ('help', 'doubles', 'skip-error', 'auth', 'load-cookies=', 'colab', 'sync', 'no-subfolder'), opt))
             for k, v in enumerate(opt, start=1):
                 print(k, v.replace('=', ''))
             sel = opt[int(input()) - 1];
