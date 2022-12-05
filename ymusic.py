@@ -5,7 +5,7 @@ import getopt, os, sys, json, getpass, re, youtube_dl
 from ytmusicapi import YTMusic
 from mutagen.id3 import ID3, APIC, TPE1, TALB, TIT2, COMM
 
-version = '1.6.0'
+version = '1.6.1'
 limit = 100000
 def auth(cookies):
     if cookies is None:
@@ -94,7 +94,7 @@ def foreach(song, fname):
     audio.save()
 
 def playlist(id, doubles=False, skipErrors=False, noSubfolder=False):
-    if os.environ.get('COLAB_GPU', False):
+    if os.environ.get('COLAB_RELEASE_TAG', False):
         skipErrors=True
     if id is None:
         if not os.path.exists(os.path.expanduser("~/.ymusic.json")):
@@ -150,7 +150,7 @@ def main(args):
     opt = ['help', 'version', 'doubles', 'skip-error', 'colab', 'auth', 'load-cookies=', 'all', 'one=', 'playlist=', 'sync', 'no-subfolder']
     arguments, values = getopt.getopt(args, 'hvdao:p:s', opt)
     if len(arguments) == 0:
-        if os.environ.get('COLAB_GPU', False):
+        if os.environ.get('COLAB_RELEASE_TAG', False):
             arguments = [('--colab', '')]
         else:
             arguments = [('-h', '')]
