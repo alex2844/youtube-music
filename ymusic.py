@@ -9,7 +9,9 @@ from mutagen.id3 import ID3, APIC, TPE1, TALB, TIT2, COMM
 version = '1.7.1'
 limit = 100000
 def auth():
-    setup_oauth()
+    oauth = setup_oauth()
+    with open(os.path.expanduser("oauth.json"), 'w') as f:
+        json.dump(oauth, f)
 
 def download(id, title=None):
     if re.match(r"^https://", id):
