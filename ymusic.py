@@ -6,12 +6,10 @@ from ytmusicapi import YTMusic
 from ytmusicapi.setup import setup_oauth
 from mutagen.id3 import ID3, APIC, TPE1, TALB, TIT2, COMM
 
-version = '1.7.1'
+version = '1.7.2'
 limit = 100000
 def auth():
-    oauth = setup_oauth()
-    with open(os.path.expanduser("oauth.json"), 'w') as f:
-        json.dump(oauth, f)
+    oauth = setup_oauth(os.path.expanduser("oauth.json"))
 
 def download(id, title=None):
     if re.match(r"^https://", id):

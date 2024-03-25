@@ -4,7 +4,7 @@ if [[ ! -z `type -p apt` ]]; then
 	fi
 fi
 if ! (stat -t /usr/local/lib/python3*/dist-packages/{ytmusicapi,youtube_dl,mutagen} > /dev/null 2>&1) then
-	pip3 install ytmusicapi youtube-dl mutagen
+	pip3 install ytmusicapi youtube-dl-nightly mutagen
 fi
 if ! (stat -t /usr/local/lib/python*/dist-packages/google/colab > /dev/null 2>&1) then
 	$(echo $([ `type -p curl` ] && echo "curl -s" || echo "wget -q -O -")" https://raw.githubusercontent.com/alex2844/youtube-music/master/ymusic.py") > '/usr/local/bin/ymusic'
