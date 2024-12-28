@@ -1,148 +1,156 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-import getopt, os, sys, json, getpass, re, youtube_dl
+import sys, os, re, json, youtube_dl
+from getopt import getopt
+from datetime import datetime
 from ytmusicapi import YTMusic
-from ytmusicapi.setup import setup_oauth
-from mutagen.id3 import ID3, APIC, TPE1, TALB, TIT2, COMM
+from ytmusicapi.setup import setup, setup_oauth
+from ytmusicapi.ytmusic import OAuthCredentials
+from mutagen.id3 import ID3, APIC, TPE1, TALB, TIT2, TYER, TDRC, COMM
 
-version = '1.7.2'
+version = '2.0.0'
 limit = 100000
-def auth():
-    oauth = setup_oauth(os.path.expanduser("oauth.json"))
+ytmusic = YTMusic()
 
-def download(id, title=None):
+def auth():
+    global ytmusic
+    config = {'auth':'headers'}
+    filepath = "config.json"
+    if os.path.exists(filepath):
+        with open(filepath) as f:
+            config = json.load(f)
+        filepath = config['auth'] + ".json"
+        if not os.path.exists(filepath):
+            if config['auth'] == 'oauth':
+                setup_oauth(
+                    client_id = config['oauth']['client_id'],
+                    client_secret = config['oauth']['client_secret'],
+                    filepath = filepath
+                )
+            elif config['auth'] == 'headers':
+                setup(
+                    filepath = filepath,
+                    headers_raw = "\n".join([f"{key}: {value}" for key, value in config['headers'].items()])
+                )
+    else:
+        filepath = config['auth'] + ".json"
+        setup(
+            filepath = filepath
+        )
+    if config['auth'] == 'oauth':
+        ytmusic = YTMusic(
+            filepath,
+            oauth_credentials = OAuthCredentials(
+                client_id = config['oauth']['client_id'],
+                client_secret = config['oauth']['client_secret']
+            )
+        )
+    else:
+        ytmusic = YTMusic(filepath)
+
+def download_track(id, info=None):
     if re.match(r"^https://", id):
         id = id.split('v=')[1].split('&')[0]
-    if title is None:
-        title = id
-    print('[youtube-music] Starting: '+title)
-    with youtube_dl.YoutubeDL({
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '0'
-        }],
-        'writethumbnail': True,
-        'outtmpl': title+'.%(etx)s',
-    }) as ydl:
-        ydl.download(['https://www.youtube.com/watch?v='+id])
+    if info is None:
+        info = ytmusic.get_watch_playlist(id)['tracks'][0]
+    fname = re.sub('[^-а-яА-Яa-zA-Z0-9_.()\s]+', '', info['title'])
+    fname = re.sub(r"\.+", " ", fname).strip('.')
+    fname = re.sub(r"\s+", " ", fname).strip()
+    if not os.path.exists(fname+'.mp3'):
+        print('[youtube-music] Starting: '+fname)
+        with youtube_dl.YoutubeDL({
+            'format': 'bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '0'
+            }],
+            'writeinfojson': True,
+            'writethumbnail': True,
+            'outtmpl': fname+'.%(etx)s',
+            'outtmpl_na_placeholder': 'NA'
+        }) as ydl:
+            ydl.download(['https://www.youtube.com/watch?v='+id])
+        id3 = ID3(fname+'.mp3')
+        if os.path.exists(fname+'.NA.info.json'):
+            with open(fname+'.NA.info.json') as f:
+                info = json.load(f)
+                os.remove(fname+'.NA.info.json')
+        if os.path.exists(fname+'.NA.jpg'):
+            with open(fname+'.NA.jpg', 'rb') as albumart:
+                id3['APIC'] = APIC(
+                    encoding=3,
+                    mime='image/jpeg',
+                    type=3, desc=info['title'],
+                    data=albumart.read()
+                )
+            os.remove(fname+'.NA.jpg')
+        id3['TIT2'] = TIT2(encoding=3, text=info['title'])
+        if 'artist' in info:
+            id3['TPE1'] = TPE1(encoding=3, text=info['artist'])
+        if 'album' in info:
+            id3['TALB'] = TALB(encoding=3, text=info['album'])
+        if 'release_year' in info:
+            id3['TYER'] = TYER(encoding=3, text=str(info['release_year']))
+        if 'release_date' in info:
+            id3['TDRC'] = TDRC(encoding=3, text=datetime.strptime(info['release_date'], "%Y%m%d").strftime("%Y-%m-%dT%H:%M:%S"))
+        id3['COMM'] = COMM(encoding=3, lang='eng', desc='desc', text='https://music.youtube.com/watch?v='+id)
+        id3.save()
+    else:
+        print('[youtube-music] Skiping: '+fname)
 
-def foreach(song, fname):
-    download(song['videoId'], fname)
-    audio = ID3(fname+'.mp3')
-    if os.path.exists(fname+'.jpg'):
-        with open(fname+'.jpg', 'rb') as albumart:
-            audio['APIC'] = APIC(
-                encoding=3,
-                mime='image/jpeg',
-                type=3, desc=song['title'],
-                data=albumart.read()
-            )
-        os.remove(fname+'.jpg')
-    if song['artists'] is not None:
-        audio['TPE1'] = TPE1(encoding=3, text=song['artists'][0]['name'])
-    if song['album'] is not None:
-        audio['TALB'] = TALB(encoding=3, text=song['album']['name'])
-    audio['TIT2'] = TIT2(encoding=3, text=song['title'])
-    audio['COMM'] = COMM(encoding=3, lang='eng', desc='desc', text='https://music.youtube.com/watch?v='+song['videoId'])
-    audio.save()
+def download_playlist(id, notSkipErrors=False):
+    try:
+        tracks = get_tracks(id)
+    except:
+        auth()
+        tracks = get_tracks(id)
+    for track in tracks:
+        if track['videoId'] is not None:
+            if notSkipErrors is False:
+                try:
+                    download_track(track['videoId'], track)
+                except KeyboardInterrupt:
+                    exit()
+                except:
+                    print('Error: vid: '+track['videoId'])
+            else:
+                download_track(track['videoId'], track)
+    print('[youtube-music] Finish')
 
-def playlist(id, doubles=False, skipErrors=False, noSubfolder=False):
-    if os.environ.get('COLAB_RELEASE_TAG', False):
-        skipErrors=True
+def get_tracks(id):
     if id is None:
-        if not os.path.exists(os.path.expanduser("oauth.json")):
-            auth()
-        list = YTMusic(os.path.expanduser("oauth.json")).get_liked_songs(limit)
+        res = ytmusic.get_liked_songs(limit)
     else:
         if re.match(r"^https://", id):
             id = id.split('list=')[1]
-        try:
-            list = YTMusic().get_playlist(id, limit)
-        except:
-            if not os.path.exists(os.path.expanduser("oauth.json")):
-                auth()
-            list = YTMusic(os.path.expanduser("oauth.json")).get_playlist(id, limit)
-    if doubles is False:
-        for song in list['tracks']:
-            if song['videoId'] is not None:
-                fname = re.sub('[^-а-яА-Яa-zA-Z0-9_.() ]+', '', song['title']).strip()
-                if song['album'] is not None and not noSubfolder:
-                    fname = os.path.join(re.sub('[^-а-яА-Яa-zA-Z0-9_.() ]+', '', song['album']['name']).strip(), fname)
-                if not os.path.exists(fname+'.mp3'):
-                    if skipErrors is False:
-                        foreach(song, fname)
-                    else:
-                        try:
-                            foreach(song, fname)
-                        except KeyboardInterrupt:
-                            exit()
-                        except:
-                            print('Error: vid: '+song['videoId'])
-                else:
-                    print('[youtube-music] Skiping: '+fname)
-        print('Finish')
-    else:
-        titles = []
-        ids = []
-        for song in list['tracks']:
-            if song['videoId'] is not None:
-                id = song['videoId']
-                title = song['title'].split(' [')[0].split(' (')[0]
-                if title in titles:
-                    print('\n'+title)
-                    print('https://music.youtube.com/watch?v='+ids[titles.index(title)])
-                    print('https://music.youtube.com/watch?v='+id)
-                else:
-                    titles.append(title)
-                    ids.append(id)
-
-def sync():
-    os.system('adb push --sync ./* /sdcard/Music')
+        res = ytmusic.get_playlist(id, limit)
+    return res['tracks']
 
 def main(args):
-    opt = ['help', 'version', 'doubles', 'skip-error', 'colab', 'all', 'one=', 'playlist=', 'sync', 'no-subfolder']
-    arguments, values = getopt.getopt(args, 'hvdao:p:s', opt)
+    opt = ['help', 'version', 'liked', 'playlist=', 'track=', 'not-skip-error']
+    arguments, values = getopt(args, 'hvdao:p:s', opt)
     if len(arguments) == 0:
-        if os.environ.get('COLAB_RELEASE_TAG', False):
-            arguments = [('--colab', '')]
-        else:
-            arguments = [('-h', '')]
+        arguments = [('-h', '')]
     for current_argument, current_value in arguments:
         if current_argument in ('-h', '--help'):
             print('\n'.join([
                 '-h, --help             Print help',
                 '-v, --version          Print program version',
-                '-d, --doubles          Show doubles',
-                '--skip-error           Skip error',
-                '--colab                Colab menu',
-                '--no-subfolder         Don\'t output songs to subfolders named as album',
-                '-a, --all              Download all liked songs',
-                '-o, --one ID           Download one song',
+                '-l, --liked            Download all liked songs',
                 '-p, --playlist ID      Download playlist',
-                '-s, --sync             Sync with android phone'
+                '-t, --track ID         Download one track',
+                '--not-skip-error       Not skip error'
             ]))
         elif current_argument in ('-v', '--version'):
             print('[youtube-music] Version: '+version)
-        elif current_argument in ('-a', '--all'):
-            playlist(None, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args), ('--no-subfolder' in args))
-        elif current_argument in ('-o', '--one'):
-            download(current_value)
+        elif current_argument in ('-l', '--liked'):
+            download_playlist(None, ('--not-skip-error' in args))
         elif current_argument in ('-p', '--playlist'):
-            playlist(current_value, ('-d' in args) or ('--doubles' in args), ('--skip-error' in args), ('--no-subfolder' in args))
-        elif current_argument in ('-s', '--sync'):
-            sync()
-        elif current_argument in ('--colab'):
-            opt = list(filter(lambda v : v not in ('help', 'doubles', 'skip-error', 'auth', 'load-cookies=', 'colab', 'sync', 'no-subfolder'), opt))
-            for k, v in enumerate(opt, start=1):
-                print(k, v.replace('=', ''))
-            sel = opt[int(input()) - 1];
-            args = [ '--'+sel.replace('=', '') ]
-            if sel[-1] == '=':
-                args.append(str(input('ID: ')))
-            main(args)
+            download_playlist(current_value, ('--not-skip-error' in args))
+        elif current_argument in ('-t', '--track'):
+            download_track(current_value)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
