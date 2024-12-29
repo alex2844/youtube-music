@@ -2,7 +2,7 @@ name: action_release
 on:
   push:
     tags:
-      - 'v*'
+      - '*'
 jobs:
   build:
     name: Action Release
