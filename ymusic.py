@@ -50,10 +50,8 @@ def auth():
         ytmusic = YTMusic(filepath)
 
 def download_track(id, info=None):
-    if re.match(r"^https://", id):
-        id = id.split('v=')[1].split('&')[0]
     if info is None:
-        info = ytmusic.get_watch_playlist(id)['tracks'][0]
+        info = ytmusic.get_watch_playlist(get_id(id))['tracks'][0]
     fname = re.sub('[^-а-яА-Яa-zA-Z0-9_.()\s]+', '', info['title'])
     fname = re.sub(r"\.+", " ", fname).strip('.')
     fname = re.sub(r"\s+", " ", fname).strip()
@@ -71,7 +69,7 @@ def download_track(id, info=None):
             'outtmpl': fname+'.%(etx)s',
             'outtmpl_na_placeholder': 'NA'
         }) as ydl:
-            ydl.download(['https://www.youtube.com/watch?v='+id])
+            ydl.download([id])
         id3 = ID3(fname+'.mp3')
         if os.path.exists(fname+'.NA.info.json'):
             with open(fname+'.NA.info.json') as f:
@@ -119,13 +117,27 @@ def download_playlist(id, notSkipErrors=False):
                 download_track(track['videoId'], track)
     print('[youtube-music] Finish')
 
+def get_id(url):
+    if re.match(r"^https://((www\.|music\.)?youtube\.com|youtu.be)/", url):
+        if "list=" in url:
+            match = re.search(r"list=([a-zA-Z0-9_-]+)", url)
+            if match:
+                return match.group(1)
+        elif "v=" in url:
+            match = re.search(r"v=([a-zA-Z0-9_-]+)", url)
+            if match:
+                return match.group(1)
+        elif "youtu.be/" in url:
+            match = re.search(r"youtu.be/([a-zA-Z0-9_-]+)", url)
+            if match:
+                return match.group(1)
+    return url
+
 def get_tracks(id):
     if id is None:
         res = ytmusic.get_liked_songs(limit)
     else:
-        if re.match(r"^https://", id):
-            id = id.split('list=')[1]
-        res = ytmusic.get_playlist(id, limit)
+        res = ytmusic.get_playlist(get_id(id), limit)
     return res['tracks']
 
 def main(args):
@@ -154,3 +166,4 @@ def main(args):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+    # main(os.environ.get('args').split(' '))
