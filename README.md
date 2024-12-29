@@ -9,29 +9,16 @@
 :$ ymusic --help
 -h, --help             Print help
 -v, --version          Print program version
--d, --doubles          Show doubles
---skip-error           Skip error
---colab                Colab menu
---auth                 Authorization
---load-cookies FILE    Use cookies file
---no-subfolder         Don\'t output songs to subfolders named as album
--a, --all              Download all liked songs
--o, --one ID           Download one song
+-l, --liked            Download all liked songs
 -p, --playlist ID      Download playlist
--s, --sync             Sync with android phone
+-t, --track ID         Download one track
+--not-skip-error       Not skip error
 ```
 
-#### Авторизация через cookie файл
-- Скачиваем расширение CorsProxy (https://alex2844.github.io/js-global-fetch/index.html?extension)
-- Заходим на страницу с расширениями (chrome://extensions/)
-- Включаем режим разработчика
-- Загрузить распакованное расширение
-- Жмем на иконку расширения правой кнопкой мыши
-- Save cookies
-
-#### Установка на локальную машину (Например ubuntu)
+#### Запуск на локальной машине
 ```bash
-curl -sL https://raw.githubusercontent.com/alex2844/youtube-music/master/install.sh | sudo -E bash -
+python -m pip install -r requirements.txt
+python ymusic.py
 ```
 
 #### Запуск в Colab (Например если не хотите ставить python)
@@ -41,10 +28,11 @@ curl -sL https://raw.githubusercontent.com/alex2844/youtube-music/master/install
 
 ## Downloads songs from Youtube Music
 
-#### Youtube
-###### Скачивание треков из Youtube Music на компьютер
-[![Youtube](https://img.youtube.com/vi/9d4cW0MACXA/0.jpg)](https://www.youtube.com/watch?v=9d4cW0MACXA 'Youtube: Скачивание треков из Youtube Music на компьютер')
-###### Скачивание треков из Youtube Music в google drive
-[![Youtube](https://img.youtube.com/vi/k6GZlTG5RFI/0.jpg)](https://www.youtube.com/watch?v=k6GZlTG5RFI 'Youtube: Скачивание треков из Youtube Music в google drive')
-###### Скачивание плейлистов из Youtube Music в google drive
-[![Youtube](https://img.youtube.com/vi/L02LzD5rAXg/0.jpg)](https://www.youtube.com/watch?v=L02LzD5rAXg 'Youtube: Скачивание плейлистов из Youtube Music в google drive')
+## Youtube
+| [![track][track_img]][track_url] | [![playlist][playlist_img]][playlist_url]
+| --- | ---
+
+[track_img]: https://img.youtube.com/vi/k6GZlTG5RFI/0.jpg "Скачивание треков из Youtube Music в google drive"
+[track_url]: https://youtu.be/k6GZlTG5RFI
+[playlist_img]: https://img.youtube.com/vi/L02LzD5rAXg/0.jpg "Скачивание плейлистов из Youtube Music в google drive"
+[playlist_url]: https://youtu.be/L02LzD5rAXg
