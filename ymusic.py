@@ -52,7 +52,7 @@ def auth():
 def download_track(id, info=None):
     if info is None:
         info = ytmusic.get_watch_playlist(get_id(id))['tracks'][0]
-    fname = re.sub('[^-а-яА-Яa-zA-Z0-9_.()\s]+', '', info['title'])
+    fname = re.sub(r"[^-а-яА-Яa-zA-Z0-9_.()\s]+", "", info['title'])
     fname = re.sub(r"\.+", " ", fname).strip('.')
     fname = re.sub(r"\s+", " ", fname).strip()
     if not os.path.exists(fname+'.mp3'):
