@@ -194,5 +194,5 @@ INSTALL_DEPENDENCIES=true ./ymusic.sh [ОПЦИИ] <URL>
 [track_url]: https://youtu.be/k6GZlTG5RFI
 [playlist_img]: https://img.youtube.com/vi/L02LzD5rAXg/0.jpg "Скачивание плейлистов"
 [playlist_url]: https://youtu.be/L02LzD5rAXg
-[script]: https://raw.githubusercontent.com/alex2844/youtube-music/main/ymusic.sh "Open script"
-[notebook]: https://colab.research.google.com/github/alex2844/youtube-music/blob/main/ymusic.ipynb "Open In Colab"
+[script]: https://raw.githubusercontent.com/alex2844/youtube-music/v3.0.0/ymusic.sh "Open script"
+[notebook]: https://colab.research.google.com/github/alex2844/youtube-music/blob/v3.0.0/ymusic.ipynb "Open In Colab"

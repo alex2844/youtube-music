@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly VERSION='main'
+readonly VERSION='3.0.0'
 : "${YM_COOKIES:=}"
 : "${YM_BROWSER:=}"
 : "${YM_URL:="https://music.youtube.com/playlist?list=LM"}"
