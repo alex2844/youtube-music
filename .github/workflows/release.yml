@@ -1,0 +1,61 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get Version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+      - name: Patch files with version
+        run: |
+          sed -i "s|/main/|/${GITHUB_REF_NAME}/|g" README.md
+          sed -i "s|/main/|/${GITHUB_REF_NAME}/|g" ymusic.ipynb
+          sed -i "s|readonly VERSION='.*'|readonly VERSION='${{ env.VERSION }}'|g" ymusic.sh
+
+      - name: Create Release Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore: Release ${{ env.VERSION }}"
+
+      - name: Update Tag
+        run: |
+          git tag -f ${{ github.ref_name }}
+          git push origin ${{ github.ref_name }} -f
+
+      - name: Generate Changelog
+        uses: alex2844/action-gh-changelog@v1
+        with:
+          output: 'RELEASE_NOTES.md'
+          lang: 'ru'
+
+      - name: Add Colab Link
+        run: |
+          NOTEBOOK=$(find . -name "*.ipynb" | head -n 1)
+          if [[ -n "${NOTEBOOK}" ]]; then
+            NOTEBOOK="${NOTEBOOK#./}"
+            COLAB_URL="https://colab.research.google.com/github/${{ github.repository }}/blob/${{ github.ref_name }}/${NOTEBOOK}"
+            BADGE="[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](${COLAB_URL} 'Open In Colab')"
+            sed -i "1i ${BADGE}\n" RELEASE_NOTES.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: ./RELEASE_NOTES.md
+          files: ymusic.sh
+          draft: false
+          prerelease: false
