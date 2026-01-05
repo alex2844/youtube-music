@@ -133,13 +133,10 @@ function fetch_track() {
 		local audio_file=$(find "${YM_TEMP_DIR}" -type f -name "temp_${video_id}.*" | head -n 1)
 		if [[ -n "${audio_file}" ]]; then
 			mv "${audio_file}" "${final_file}"
-			log "✅ Done."
-		else
-			error "File downloaded but not found in temp."
+			return 0
 		fi
-	else
-		log "⚠️ Download failed for ${url}"
 	fi
+	return 1
 }
 
 function main() {
@@ -234,14 +231,36 @@ function main() {
 		fi
 	fi
 
+	local failed_items=()
 	for item in "${playlist_items[@]}"; do
 		log "=== [${count}/${total}] Processing ==="
+		if [[ "${item}" =~ ^NA\ -\ \[(Deleted|Private)\ video\] ]]; then
+			((count++))
+			continue
+		fi
+		local title="${item}"
 		local id="${item:(-12):11}"
 		local video_url="https://music.youtube.com/watch?v=${id}"
-		fetch_track "${video_url}" "${item}"
+		if ! fetch_track "${video_url}" "${title}"; then
+			log "⚠️ Download failed for: ${title}"
+			failed_items+=("# ${title}" "${video_url}")
+		fi
 		((count++))
 	done
-	log "All completed."
+
+	if [[ ${#failed_items[@]} -gt 0 ]]; then
+		echo ""
+		log "----------------------------------------------------------------"
+		log "⚠️  COMPLETED WITH ERRORS"
+		log "The following ${#failed_items[@]} tracks failed to download:"
+		echo ""
+		for failed in "${failed_items[@]}"; do
+			echo "${failed}"
+		done
+		log "----------------------------------------------------------------"
+	else
+		log "✅ All completed successfully."
+	fi
 }
 
 if [[ "${BASH_SOURCE:-${0}}" == "${0}" ]]; then
