@@ -96,7 +96,7 @@ function call_ytdlp() {
 	local force_cookies=false
 
 	# WL = Watch Later, LL = Liked Videos, LM = Liked Music
-	if [[ "${raw_args}" =~ list=(L[LM]|WL) ]] || [[ "${raw_args}" == *"--mark-watched"* ]]; then
+	if [[ "${raw_args}" =~ list=(L[LM]|WL) ]] || [[ "${raw_args}" == *"--mark-watched"* ]] || [[ "${raw_args}" == *"--batch-file"* ]]; then
 		force_cookies=true
 	fi
 	if ! "${force_cookies}" && yt-dlp "${YTDLP_OPTS[@]}" "$@" 2>/dev/null; then
@@ -255,7 +255,7 @@ function main() {
 		local video_url="https://music.youtube.com/watch?v=${id}"
 		if ! fetch_track "${video_url}" "${title}"; then
 			log "⚠️ Download failed for: ${title}"
-			failed_items+=("# ${title}" "${video_url}")
+			failed_items+=("# ${title}"$'\n'"${video_url}")
 		fi
 		((count++))
 	done
