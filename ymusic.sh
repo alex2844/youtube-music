@@ -166,6 +166,7 @@ function main() {
 		shift $((OPTIND - 1))
 		[[ -n "${1:-}" ]] && YM_URL="$1"
 	fi
+	[[ -z "${YM_URL}" ]] && error "URL or File not specified."
 
 	"${YM_FORCE_IPV4}" && YTDLP_OPTS+=(--force-ipv4)
 	[[ -n "${YM_COOKIES}" ]] && YTDLP_COOKIE_ARGS+=(--cookies "${YM_COOKIES}")
@@ -173,6 +174,17 @@ function main() {
 
 	check_dependencies
 	mkdir -p "${YM_OUTPUT_DIR}" "${YM_TEMP_DIR}"
+
+	local is_batch_file=false
+	local input_args=()
+	
+	if [[ -f "${YM_URL}" ]]; then
+		log "Input is a file. Using batch mode: ${YM_URL}"
+		is_batch_file=true
+		input_args=(--batch-file "${YM_URL}")
+	else
+		input_args=("${YM_URL}")
+	fi
 
 	log "Fetching playlist info..."
 	local fetch_opts=(
@@ -197,13 +209,13 @@ function main() {
 		--output "%(uploader)s - %(title)s [%(id)s]"
 	)
 	local playlist_items=()
-	mapfile -t playlist_items < <(call_ytdlp "${fetch_opts[@]}" "${YM_URL}")
+	mapfile -t playlist_items < <(call_ytdlp "${fetch_opts[@]}" "${input_args[@]}")
 
 	local count=1
 	local total=${#playlist_items[@]}
 	[[ ${total} -eq 0 ]] && error "Playlist is empty or failed to fetch."
 
-	if [[ "${YM_URL}" == *"list="* ]]; then
+	if [[ "${YM_URL}" == *"list="* ]] && ! "${is_batch_file}"; then
 		log "Sync mode: Checking for removed tracks..."
 
 		declare -A valid_ids
