@@ -78,7 +78,7 @@ function install_dependency() {
 				if ! command -v pip &>/dev/null && ! command -v pip3 &>/dev/null; then
 					install_dependency "pip" "apt" "python3-pip"
 				fi
-				python3 -m pip install --quiet --break-system-packages "${pkg_name}"
+				python3 -m pip install --quiet --break-system-packages --pre "${pkg_name}"
 			;;
 		esac
 	fi
@@ -88,7 +88,7 @@ function check_dependencies() {
 	log "Checking base dependencies..."
 	install_dependency "ffmpeg"
 	install_dependency "python3"
-	install_dependency "yt-dlp" "pip"
+	install_dependency "yt-dlp" "pip" "yt-dlp[default]"
 }
 
 function call_ytdlp() {
@@ -177,7 +177,7 @@ function main() {
 
 	local is_batch_file=false
 	local input_args=()
-	
+
 	if [[ -f "${YM_URL}" ]]; then
 		log "Input is a file. Using batch mode: ${YM_URL}"
 		is_batch_file=true
