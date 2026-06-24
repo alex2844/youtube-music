@@ -129,13 +129,39 @@ function fetch_track() {
 		--embed-metadata
 		--output "${YM_TEMP_DIR}/temp_${video_id}.%(ext)s"
 	)
-	if call_ytdlp "${fetch_opts[@]}" -t mp3 "${url}"; then
-		local audio_file=$(find "${YM_TEMP_DIR}" -type f -name "temp_${video_id}.*" | head -n 1)
-		if [[ -n "${audio_file}" ]]; then
-			mv "${audio_file}" "${final_file}"
-			return 0
+
+	local err_log="${YM_TEMP_DIR}/err_${video_id}.log"
+	local max_attempts=3
+	local attempt=1
+
+	while [[ ${attempt} -le ${max_attempts} ]]; do
+		call_ytdlp "${fetch_opts[@]}" -t mp3 "${url}" 2> "${err_log}"
+		local exit_code=$?
+
+		[[ -s "${err_log}" ]] && cat "${err_log}" >&2
+
+		if [[ ${exit_code} -eq 0 ]]; then
+			local audio_file=$(find "${YM_TEMP_DIR}" -type f -name "temp_${video_id}.*" | head -n 1)
+			if [[ -n "${audio_file}" ]]; then
+				mv "${audio_file}" "${final_file}"
+				rm -f "${err_log}"
+				return 0
+			fi
 		fi
-	fi
+
+		if ! grep -q "Requested format is not available" "${err_log}"; then
+			rm -f "${err_log}"
+			return 1
+		fi
+
+		if [[ ${attempt} -lt ${max_attempts} ]]; then
+			log "⚠️ YouTube rate-limit detected. Retrying in 3 seconds... (${attempt}/${max_attempts})"
+			sleep 3
+		fi
+		((attempt++))
+	done
+
+	rm -f "${err_log}"
 	return 1
 }
 
