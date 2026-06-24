@@ -246,7 +246,8 @@ function main() {
 	local failed_items=()
 	for item in "${playlist_items[@]}"; do
 		log "=== [${count}/${total}] Processing ==="
-		if [[ "${item}" =~ ^NA\ -\ \[(Deleted|Private)\ video\] ]]; then
+		if [[ "${item}" == "NA - NA ["* ]] || [[ "${item}" =~ ^NA\ -\ \[(Deleted|Private)\ video\] ]]; then
+			log "⏭️  Skipping unavailable video: ${item}"
 			((count++))
 			continue
 		fi
