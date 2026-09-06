@@ -30,7 +30,7 @@ function usage() {
 	echo "  --temp-dir=<path>      Temporary directory"
 	echo ""
 	echo "Environment:"
-	echo "  INSTALL_DEPENDENCIES   Set 'true' to auto-install packages (default: false)"
+	echo "  INSTALL_DEPENDENCIES   Set 'true' to auto-install/update packages (default: false)"
 	exit 0
 }
 
@@ -60,32 +60,42 @@ function install_dependency() {
 	local pkg_manager="${2:-apt}"
 	local pkg_name="${3:-${dependency}}"
 	local sudo=""
-	if ! command -v "${dependency}" &>/dev/null; then
-		if ! "${INSTALL_DEPENDENCIES}"; then
-			error "Dependency '${dependency}' is missing. Please install it manually or set INSTALL_DEPENDENCIES=true"
-		fi
-		log "Installing: ${dependency}..."
-		[ "$(id -u)" -gt 0 ] && sudo="sudo"
-		case "${pkg_manager}" in
-			apt)
-				if command -v apt-get &>/dev/null; then
-					${sudo} apt-get update -qq && ${sudo} apt-get install -y "${pkg_name}" >/dev/null
-				else
-					error "apt-get not found. Cannot auto-install '${dependency}'. Please install it manually."
-				fi
-			;;
-			pip)
-				if ! command -v pip &>/dev/null && ! command -v pip3 &>/dev/null; then
-					install_dependency "pip" "apt" "python3-pip"
-				fi
-				python3 -m pip install --quiet --break-system-packages --pre "${pkg_name}"
-			;;
-		esac
+	[ "$(id -u)" -gt 0 ] && sudo="sudo"
+
+	local action="Installing"
+	if command -v "${dependency}" &>/dev/null; then
+		"${INSTALL_DEPENDENCIES}" || return 0
+		action="Updating"
+	elif ! "${INSTALL_DEPENDENCIES}"; then
+		error "Dependency '${dependency}' is missing. Please install it manually or set INSTALL_DEPENDENCIES=true"
 	fi
+
+	log "${action}: ${dependency}..."
+
+	case "${pkg_manager}" in
+		apt)
+			if command -v apt-get &>/dev/null; then
+				${sudo} apt-get install -y "${pkg_name}" >/dev/null
+			elif [[ "${action}" != "Updating" ]]; then
+				error "apt-get not found. Cannot auto-install '${dependency}'. Please install it manually."
+			fi
+		;;
+		pip)
+			if ! command -v pip &>/dev/null && ! command -v pip3 &>/dev/null; then
+				install_dependency "pip" "apt" "python3-pip"
+			fi
+			python3 -m pip install --upgrade --quiet --break-system-packages --pre "${pkg_name}"
+		;;
+	esac
 }
 
 function check_dependencies() {
 	log "Checking base dependencies..."
+	if "${INSTALL_DEPENDENCIES}" && command -v apt-get &>/dev/null; then
+		local sudo=""
+		[ "$(id -u)" -gt 0 ] && sudo="sudo"
+		${sudo} apt-get update -qq 2>/dev/null || true
+	fi
 	install_dependency "ffmpeg"
 	install_dependency "python3"
 	install_dependency "yt-dlp" "pip" "yt-dlp[default]"

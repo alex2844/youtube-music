@@ -81,10 +81,10 @@ filenames for universal compatibility.
       (no YouTube traffic).
 4. Run the cells.
 
-## Installing Dependencies
+## Installing and Updating Dependencies
 
-If you don't have dependencies installed locally, you can use the
-`INSTALL_DEPENDENCIES=true` variable to attempt auto-installation.
+If you don't have dependencies installed locally or want to update them,
+you can use the `INSTALL_DEPENDENCIES=true` variable to attempt auto-installation/update.
 
 ```bash
 INSTALL_DEPENDENCIES=true ./ymusic.sh [OPTIONS] <URL>
@@ -174,10 +174,10 @@ YouTube Music. Он использует [`yt-dlp`](https://github.com/yt-dlp/yt
       скачивания (без трафика с YouTube).
 4. Запустите ячейки.
 
-## Установка Зависимостей
+## Установка и Обновление Зависимостей
 
-Если зависимости не установлены, можно использовать переменную
-`INSTALL_DEPENDENCIES=true` для их автоматической установки.
+Если зависимости не установлены или их требуется обновить, можно использовать переменную
+`INSTALL_DEPENDENCIES=true` для их автоматической установки/обновления.
 
 ```bash
 INSTALL_DEPENDENCIES=true ./ymusic.sh [ОПЦИИ] <URL>
