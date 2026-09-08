@@ -84,7 +84,11 @@ function install_dependency() {
 			if ! command -v pip &>/dev/null && ! command -v pip3 &>/dev/null; then
 				install_dependency "pip" "apt" "python3-pip"
 			fi
-			python3 -m pip install --upgrade --quiet --break-system-packages --pre "${pkg_name}"
+			local pip_opts=(--upgrade --quiet --pre)
+			if python3 -m pip help install 2>/dev/null | grep -q -- '--break-system-packages'; then
+				pip_opts+=(--break-system-packages)
+			fi
+			python3 -m pip install "${pip_opts[@]}" "${pkg_name}"
 		;;
 	esac
 }
@@ -99,6 +103,22 @@ function check_dependencies() {
 	install_dependency "ffmpeg"
 	install_dependency "python3"
 	install_dependency "yt-dlp" "pip" "yt-dlp[default]"
+
+	local js_runtime_found=false
+	for rt in deno node bun qjs; do
+		if command -v "${rt}" &>/dev/null; then
+			js_runtime_found=true
+			break
+		fi
+	done
+
+	if ! "${js_runtime_found}"; then
+		if "${INSTALL_DEPENDENCIES}" && command -v apt-get &>/dev/null; then
+			install_dependency "node" "apt" "nodejs"
+		else
+			log "⚠️  No JavaScript runtime found (deno/node/bun/qjs). YouTube extraction may fail."
+		fi
+	fi
 }
 
 function call_ytdlp() {
@@ -209,6 +229,19 @@ function main() {
 	[[ -n "${YM_BROWSER}" ]] && YTDLP_COOKIE_ARGS+=(--cookies-from-browser "${YM_BROWSER}")
 
 	check_dependencies
+
+	if yt-dlp --help 2>/dev/null | grep -q -- '--js-runtimes'; then
+		for rt in node bun qjs; do
+			if command -v "${rt}" &>/dev/null; then
+				case "${rt}" in
+					qjs) YTDLP_OPTS+=(--js-runtimes quickjs);;
+					*) YTDLP_OPTS+=(--js-runtimes "${rt}");;
+				esac
+				break
+			fi
+		done
+	fi
+
 	mkdir -p "${YM_OUTPUT_DIR}" "${YM_TEMP_DIR}"
 
 	local is_batch_file=false
@@ -291,7 +324,7 @@ function main() {
 		local id="${item:(-12):11}"
 		local video_url="https://music.youtube.com/watch?v=${id}"
 		if ! fetch_track "${video_url}" "${title}"; then
-			log "⚠️ Download failed for: ${title}"
+			log "⚠️  Download failed for: ${title}"
 			failed_items+=("# ${title}"$'\n'"${video_url}")
 		fi
 		((count++))
